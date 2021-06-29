@@ -1,0 +1,22 @@
+name: LLVM Toolchain
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Actions
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: bash ci.sh deps
+    - name: Deploy builder
+      env:
+          LLVM_NAME: ${{ secrets.LLVM_NAME}}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+          GH_EMAIL: ${{ secrets.GH_EMAIL }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_PUSH_REPO_URL: ${{ secrets.GH_PUSH_REPO_URL }}
+      run: ./tc-build.sh
