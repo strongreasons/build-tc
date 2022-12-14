@@ -107,7 +107,7 @@ git clone "https://$GH_USERNAME:$GH_TOKEN@$GH_PUSH_REPO_URL" rel_repo
 pushd rel_repo || exit
 rm -fr ./*
 cp -r ../install/* .
-git checkout README.md # keep this as it's not part of the toolchain itself
+git checkout README.md LICENSE # keep this as it's not part of the toolchain itself
 git add .
 git commit -asm "$LLVM_NAME: Bump to $rel_date release
 
