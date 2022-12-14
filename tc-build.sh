@@ -113,8 +113,7 @@ git commit -asm "$LLVM_NAME: Bump to $rel_date release
 
 LLVM commit: $llvm_commit_url
 Clang Version: $clang_version
-Binutils version: $binutils_ver
-Builder commit: https://$GH_PUSH_REPO_URL/commit/$builder_commit"
+Binutils version: $binutils_ver"
 git push -f
 popd || exit
 tg_post_msg "<b>$LLVM_NAME: Toolchain pushed to <code>https://$GH_PUSH_REPO_URL</code></b>"
