@@ -31,12 +31,19 @@ tg_post_msg() {
         -d text="$1"
 
 }
+
 tg_post_build() {
     curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" \
         -F chat_id="$TG_CHAT_ID" \
         -F "disable_web_page_preview=true" \
         -F "parse_mode=html" \
         -F caption="$3"
+}
+
+tg_post_erlog() {
+    curl -F document=@"build.log" "https://api.telegram.org/bot$TG_TOKEN/sendDocument" \
+        -F chat_id="$TG_CHAT_ID" \
+        -F caption="Build ran into errors, plox check logs"
 }
 
 # Build Info
@@ -62,7 +69,7 @@ CC=clang CXX=clang++ ./build-llvm.py \
 for clang in install/bin/clang-1*; do
     if [ ! -f "$clang" ]; then
         err "Building LLVM failed ! Kindly check errors !!"
-        tg_post_build "build.log" "$TG_CHAT_ID" "Error Log"
+        tg_post_erlog
         exit 1
     fi
 done
