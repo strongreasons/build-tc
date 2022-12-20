@@ -79,6 +79,15 @@ msg "$LLVM_NAME: Building binutils..."
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
 ./build-binutils.py --targets arm aarch64 x86_64
 
+# Check if the binutils dir exists or not
+for binutils in binutils-*; do
+    if [ ! -d "$binutils" ]; then
+        err "curl: failed to download binutils from https://ftp.gnu.org/gnu/binutils"
+        tg_post_erlog
+        exit 1
+    fi
+done
+
 # Remove unused products
 rm -fr install/include
 rm -f install/lib/*.a install/lib/*.la
