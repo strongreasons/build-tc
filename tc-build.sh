@@ -63,6 +63,7 @@ CC=clang CXX=clang++ ./build-llvm.py \
     --projects "clang;lld;polly" \
     --targets "ARM;AArch64;X86" \
     --shallow-clone \
+    --quiet-cmake \
     --build-type "Release" 2>&1 | tee build.log
 
 # Check if the final clang binary exists or not.
