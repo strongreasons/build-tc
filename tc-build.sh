@@ -65,7 +65,7 @@ CC=clang CXX=clang++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-llvm.py \
     --shallow-clone \
     --quiet-cmake \
     --build-type "Release" \
-    --branch "release/16.x" 2>&1 | tee build.log
+    --branch "release/17.x" 2>&1 | tee build.log
 
 # Check if the final clang binary exists or not.
 for clang in install/bin/clang-1*; do
