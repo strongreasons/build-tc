@@ -51,6 +51,7 @@ function do_deps() {
         lld \
         make \
         ninja-build \
+        patchelf \
         python3 \
         texinfo \
         xz-utils \
