@@ -4,10 +4,10 @@
 # LLVM_NAME | Your desired Toolchain Name
 # TG_TOKEN | Your Telegram Bot Token
 # TG_CHAT_ID | Your Telegram Channel / Group Chat ID
-# GH_USERNAME | Your Github Username
-# GH_EMAIL | Your Github Email
-# GH_TOKEN | Your Github Token ( repo & repo_hook )
-# GH_PUSH_REPO_URL | Your Repository for store compiled Toolchain ( without https:// or www. ) ex. github.com/xyz-prjkt/xRageTC.git
+# GL_USERNAME | Your Gitlab Username
+# GL_EMAIL | Your Gitlab Email
+# GL_TOKEN | Your Gitlab Token ( repo & repo_hook )
+# GL_PUSH_REPO_URL | Your Repository for store compiled Toolchain ( without https:// or www. ) ex. gitlab.com/Tiktodz/electrowizard-clang.git
 
 # Function to show an informational message
 msg() {
@@ -20,6 +20,7 @@ err() {
 
 # Set a directory
 DIR="$(pwd ...)"
+install=$DIR/install
 
 # Inlined function to post a message
 export BOT_MSG_URL="https://api.telegram.org/bot$TG_TOKEN/sendMessage"
@@ -58,14 +59,20 @@ tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><c
 msg "$LLVM_NAME: Building LLVM..."
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 CC=clang CXX=clang++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-llvm.py \
-    --clang-vendor "$LLVM_NAME" \
+    --vendor-string "$LLVM_NAME" \
     --defines "LLVM_PARALLEL_COMPILE_JOBS=$(nproc) LLVM_PARALLEL_LINK_JOBS=$(nproc) CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3" \
-    --projects "all" \
-    --targets "ARM;AArch64;X86" \
-    --shallow-clone \
+    --assertions \
+    --build-stage1-only \
+    --build-target distribution \
+    --check-targets clang lld llvm \
+    --install-folder "$install" \
+    --install-target distribution \
+    --projects all \
     --quiet-cmake \
-    --build-type "Release" \
-    --branch "release/17.x" 2>&1 | tee build.log
+    --shallow-clone \
+    --show-build-commands \
+    --targets ARM AArch64 X86 \
+    --ref "llvmorg-17.0.6" 2>&1 | tee build.log
 
 # Check if the final clang binary exists or not.
 for clang in install/bin/clang-1*; do
@@ -79,7 +86,7 @@ done
 # Build binutils
 msg "$LLVM_NAME: Building binutils..."
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
-CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --targets arm aarch64 x86_64
+CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --install-folder "$install" --show-build-commands --targets arm aarch64 x86_64
 
 # Check if the binutils dir exists or not
 for binutils in binutils-*; do
@@ -120,11 +127,11 @@ clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>LLVM Commit : </b><code>$llvm_commit_url</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 
-# Push to GitHub
+# Push to Gitlab
 # Update Git repository
-git config --global user.name "$GH_USERNAME"
-git config --global user.email "$GH_EMAIL"
-git clone "https://$GH_USERNAME:$GH_TOKEN@$GH_PUSH_REPO_URL" rel_repo
+git config --global user.name "$GL_USERNAME"
+git config --global user.email "$GL_EMAIL"
+git clone "https://$GL_USERNAME:$GL_TOKEN@$GL_PUSH_REPO_URL" rel_repo
 pushd rel_repo || exit
 rm -fr ./*
 cp -r ../install/* .
@@ -137,4 +144,4 @@ Clang Version: $clang_version
 Binutils version: $binutils_ver"
 git push -f
 popd || exit
-tg_post_msg "<b>$LLVM_NAME: Toolchain pushed to <code>https://$GH_PUSH_REPO_URL</code></b>"
+tg_post_msg "<b>$LLVM_NAME: Toolchain pushed to <code>https://$GL_PUSH_REPO_URL</code></b>"
