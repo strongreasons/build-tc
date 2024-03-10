@@ -90,9 +90,9 @@ tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
 CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --install-folder "$install" --show-build-commands --targets arm aarch64 x86_64
 
 # Check if the binutils dir exists or not
-for binutils in "$src"binutils-*; do
+for binutils in "$src"/binutils-*; do
     if [ ! -d "$binutils" ]; then
-        err "curl: failed to download binutils from https://ftp.gnu.org/gnu/binutils"
+        err "curl: failed to download binutils from https://sourceware.org/pub/binutils/releases"
         tg_post_erlog
         exit 1
     fi
