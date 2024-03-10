@@ -75,7 +75,7 @@ CC=clang CXX=clang++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-llvm.py \
     --targets ARM AArch64 X86 \
     --ref "llvmorg-17.0.6" 2>&1 | tee build.log
 
- Check if the final clang binary exists or not.
+# Check if the final clang binary exists or not.
 for clang in install/bin/clang-1*; do
     if [ ! -f "$clang" ]; then
         err "Building LLVM failed ! Kindly check errors !!"
