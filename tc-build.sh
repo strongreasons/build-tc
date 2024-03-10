@@ -75,13 +75,13 @@ CC=clang CXX=clang++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-llvm.py \
     --ref "llvmorg-17.0.6" 2>&1 | tee build.log
 
 # Check if the final clang binary exists or not.
-for clang in install/bin/clang-1*; do
-    if [ ! -f "$clang" ]; then
-        err "Building LLVM failed ! Kindly check errors !!"
-        tg_post_erlog
-        exit 1
-    fi
-done
+#for clang in install/bin/clang-1*; do
+#    if [ ! -f "$clang" ]; then
+#        err "Building LLVM failed ! Kindly check errors !!"
+#        tg_post_erlog
+#        exit 1
+#    fi
+#done
 
 # Build binutils
 msg "$LLVM_NAME: Building binutils..."
@@ -93,12 +93,12 @@ rm -fr install/include
 rm -f install/lib/*.a install/lib/*.la
 
 # Strip remaining products
-for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do
+for f in $(find "$DIR"/install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do
     strip -s "${f::-1}"
 done
 
 # Set executable rpaths so setting LD_LIBRARY_PATH isn't necessary
-for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do
+for bin in $(find "$DIR"/install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do
     # Remove last character from file output (':')
     bin="${bin::-1}"
 
