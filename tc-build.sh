@@ -21,6 +21,7 @@ err() {
 # Set a directory
 DIR="$(pwd ...)"
 install=$DIR/install
+src=$DIR/src
 
 # Inlined function to post a message
 export BOT_MSG_URL="https://api.telegram.org/bot$TG_TOKEN/sendMessage"
@@ -107,7 +108,7 @@ for bin in $(find "$DIR"/install -mindepth 2 -maxdepth 3 -type f -exec file {} \
 done
 
 # Release Info
-pushd llvm-project || exit
+pushd "$src"/llvm-project || exit
 llvm_commit="$(git rev-parse HEAD)"
 short_llvm_commit="$(cut -c-8 <<<"$llvm_commit")"
 popd || exit
