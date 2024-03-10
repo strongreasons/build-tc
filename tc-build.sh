@@ -89,18 +89,9 @@ msg "$LLVM_NAME: Building binutils..."
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
 CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --install-folder "$install" --show-build-commands --targets arm aarch64 x86_64
 
-# Check if the binutils dir exists or not
-for binutils in src/binutils-*; do
-    if [ ! -d "$binutils" ]; then
-        err "curl: failed to download binutils from https://sourceware.org/pub/binutils/releases"
-        tg_post_erlog
-        exit 1
-    fi
-done
-
 # Remove unused products
-rm -fr install/include
-rm -f install/lib/*.a install/lib/*.la
+rm -fr "$DIR"/install/include
+rm -f "$DIR"/install/lib/*.a install/lib/*.la
 
 # Strip remaining products
 for f in $(find "$DIR"/install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do
@@ -123,7 +114,7 @@ short_llvm_commit="$(cut -c-8 <<<"$llvm_commit")"
 popd || exit
 
 llvm_commit_url="https://github.com/llvm/llvm-project/commit/$short_llvm_commit"
-binutils_ver="$(echo src/binutils-* | sed "s/binutils-//g")"
+binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>LLVM Commit : </b><code>$llvm_commit_url</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
@@ -133,10 +124,10 @@ tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Versio
 git config --global user.name "$GL_USERNAME"
 git config --global user.email "$GL_EMAIL"
 git clone "https://$GL_USERNAME:$GL_TOKEN@$GL_PUSH_REPO_URL" rel_repo
-pushd rel_repo || exit
+pushd $(pwd)/rel_repo || exit
 rm -fr ./*
 cp -r ../install/* .
-git checkout README.md LICENSE # keep this as it's not part of the toolchain itself
+git checkout LICENSE # keep this as it's not part of the toolchain itself
 git add .
 git commit -asm "$LLVM_NAME: Bump to $rel_date release
 
