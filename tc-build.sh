@@ -62,11 +62,17 @@ tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 CC=clang CXX=clang++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-llvm.py \
     --vendor-string "$LLVM_NAME" \
     --defines "LLVM_PARALLEL_COMPILE_JOBS=$(nproc) LLVM_PARALLEL_LINK_JOBS=$(nproc) CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3" \
+    --assertions \
+    --build-stage1-only \
+    --build-target distribution \
+    --check-targets clang lld llvm \
+    --install-folder "$install" \
+    --install-target distribution \
     --projects all \
-    --targets ARM AArch64 X86 \
-    --shallow-clone \
     --quiet-cmake \
-    --build-type "Release" \
+    --shallow-clone \
+    --show-build-commands \
+    --targets ARM AArch64 X86 \
     --ref "llvmorg-17.0.6" 2>&1 | tee build.log
 
 # Check if the final clang binary exists or not.
@@ -81,12 +87,12 @@ done
 # Build binutils
 msg "$LLVM_NAME: Building binutils..."
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
-CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --targets arm aarch64 x86_64
+CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --install-folder "$install" --show-build-commands --targets arm aarch64 x86_64
 
 # Check if the binutils dir exists or not
-for binutils in binutils-*; do
+for binutils in src/binutils-*; do
     if [ ! -d "$binutils" ]; then
-        err "curl: failed to download binutils from https://ftp.gnu.org/gnu/binutils"
+        err "curl: failed to download binutils from https://sourceware.org/pub/binutils/releases"
         tg_post_erlog
         exit 1
     fi
@@ -97,12 +103,12 @@ rm -fr install/include
 rm -f install/lib/*.a install/lib/*.la
 
 # Strip remaining products
-for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do
+for f in $(find "$DIR"/install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do
     strip -s "${f::-1}"
 done
 
 # Set executable rpaths so setting LD_LIBRARY_PATH isn't necessary
-for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do
+for bin in $(find "$DIR"/install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do
     # Remove last character from file output (':')
     bin="${bin::-1}"
 
@@ -111,18 +117,18 @@ for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | gre
 done
 
 # Release Info
-pushd llvm-project || exit
+pushd "$src"/llvm-project || exit
 llvm_commit="$(git rev-parse HEAD)"
 short_llvm_commit="$(cut -c-8 <<<"$llvm_commit")"
 popd || exit
 
 llvm_commit_url="https://github.com/llvm/llvm-project/commit/$short_llvm_commit"
-binutils_ver="$(echo binutils-* | sed "s/binutils-//g")"
+binutils_ver="$(echo src/binutils-* | sed "s/binutils-//g")"
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>LLVM Commit : </b><code>$llvm_commit_url</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 
-# Push to GitLab
+# Push to Gitlab
 # Update Git repository
 git config --global user.name "$GL_USERNAME"
 git config --global user.email "$GL_EMAIL"
