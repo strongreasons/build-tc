@@ -75,19 +75,28 @@ CC=clang CXX=clang++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-llvm.py \
     --targets ARM AArch64 X86 \
     --ref "llvmorg-17.0.6" 2>&1 | tee build.log
 
-# Check if the final clang binary exists or not.
-#for clang in install/bin/clang-1*; do
-#    if [ ! -f "$clang" ]; then
-#        err "Building LLVM failed ! Kindly check errors !!"
-#        tg_post_erlog
-#        exit 1
-#    fi
-#done
+ Check if the final clang binary exists or not.
+for clang in install/bin/clang-1*; do
+    if [ ! -f "$clang" ]; then
+        err "Building LLVM failed ! Kindly check errors !!"
+        tg_post_erlog
+        exit 1
+    fi
+done
 
 # Build binutils
 msg "$LLVM_NAME: Building binutils..."
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
 CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --install-folder "$install" --show-build-commands --targets arm aarch64 x86_64
+
+# Check if the binutils dir exists or not
+for binutils in "$src"binutils-*; do
+    if [ ! -d "$binutils" ]; then
+        err "curl: failed to download binutils from https://ftp.gnu.org/gnu/binutils"
+        tg_post_erlog
+        exit 1
+    fi
+done
 
 # Remove unused products
 rm -fr install/include
@@ -114,7 +123,7 @@ short_llvm_commit="$(cut -c-8 <<<"$llvm_commit")"
 popd || exit
 
 llvm_commit_url="https://github.com/llvm/llvm-project/commit/$short_llvm_commit"
-binutils_ver="$(echo binutils-* | sed "s/binutils-//g")"
+binutils_ver="$(echo "$src"/binutils-* | sed "s/binutils-//g")"
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>LLVM Commit : </b><code>$llvm_commit_url</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
