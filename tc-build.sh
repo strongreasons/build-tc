@@ -123,7 +123,7 @@ tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Versio
 # Update Git repository
 git config --global user.name "$GL_USERNAME"
 git config --global user.email "$GL_EMAIL"
-git clone "https://$GL_USERNAME:$GL_TOKEN@$GL_PUSH_REPO_URL" rel_repo
+git clone "https://$GL_USERNAME:$GL_TOKEN@$GL_PUSH_REPO_URL" -b 16 rel_repo
 pushd "$(pwd)"/rel_repo || exit
 rm -fr ./*
 cp -r ../install/* .
