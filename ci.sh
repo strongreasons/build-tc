@@ -46,6 +46,7 @@ function do_deps() {
         gcc \
         g++ \
         git \
+        git lfs install \
         libelf-dev \
         libssl-dev \
         lld \
