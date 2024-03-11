@@ -59,9 +59,8 @@ tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><c
 # Build LLVM
 msg "$LLVM_NAME: Building LLVM..."
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
-CC=clang CXX=clang++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-llvm.py \
+./build-llvm.py \
     --vendor-string "$LLVM_NAME" \
-    --defines "LLVM_PARALLEL_COMPILE_JOBS=$(nproc) LLVM_PARALLEL_LINK_JOBS=$(nproc) CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3" \
     --assertions \
     --build-stage1-only \
     --build-target distribution \
@@ -87,19 +86,19 @@ done
 # Build binutils
 msg "$LLVM_NAME: Building binutils..."
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
-CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./build-binutils.py --install-folder "$install" --show-build-commands --targets arm aarch64 x86_64
+./build-binutils.py --install-folder "$install" --show-build-commands --targets arm aarch64 x86_64
 
 # Remove unused products
-rm -fr "$DIR"/install/include
-rm -f "$DIR"/install/lib/*.a install/lib/*.la
+rm -fr $DIR/install/include
+rm -f $DIR/install/lib/*.a install/lib/*.la
 
 # Strip remaining products
-for f in $(find "$DIR"/install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do
+for f in $(find $DIR/install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do
     strip -s "${f::-1}"
 done
 
 # Set executable rpaths so setting LD_LIBRARY_PATH isn't necessary
-for bin in $(find "$DIR"/install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do
+for bin in $(find $DIR/install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do
     # Remove last character from file output (':')
     bin="${bin::-1}"
 
@@ -108,26 +107,26 @@ for bin in $(find "$DIR"/install -mindepth 2 -maxdepth 3 -type f -exec file {} \
 done
 
 # Release Info
-pushd "$src"/llvm-project || exit
+pushd $src/llvm-project || exit
 llvm_commit="$(git rev-parse HEAD)"
 short_llvm_commit="$(cut -c-8 <<<"$llvm_commit")"
 popd || exit
 
 llvm_commit_url="https://github.com/llvm/llvm-project/commit/$short_llvm_commit"
-binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
+binutils_ver="$(echo $src/binutils-* | sed "s/binutils-//g")"
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>LLVM Commit : </b><code>$llvm_commit_url</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 
 # Push to Gitlab
 # Update Git repository
-git config --global user.name "$GL_USERNAME"
-git config --global user.email "$GL_EMAIL"
-git clone "https://$GL_USERNAME:$GL_TOKEN@$GL_PUSH_REPO_URL" -b 16 rel_repo
-pushd "$(pwd)"/rel_repo || exit
+git config --global user.name $GL_USERNAME
+git config --global user.email $GL_EMAIL
+git clone https://$GL_USERNAME:$GL_TOKEN@$GL_PUSH_REPO_URL rel_repo
+pushd $(pwd)/rel_repo || exit
 rm -fr ./*
 cp -r ../install/* .
-git checkout LICENSE # keep this as it's not part of the toolchain itself
+git checkout
 git add .
 git commit -asm "$LLVM_NAME: Bump to $rel_date release
 
